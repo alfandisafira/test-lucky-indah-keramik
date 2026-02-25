@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Mahasiswa</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- DataTables CSS -->
+  <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #161920;
+      --surface2: #1e2330;
+      --border: #2a2f3e;
+      --text: #e8eaf2;
+      --muted: #6b7280;
+      --accent: #4f8aff;
+      --accent2: #f857a6;
+      --green: #22d3a5;
+      --yellow: #f5c842;
+      --purple: #a78bfa;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      margin: 0;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(79,138,255,.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 10% 80%, rgba(248,87,166,.06) 0%, transparent 60%);
+    }
+
+    /* ── Navbar ───────────────────────────── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand {
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: .95rem;
+      letter-spacing: .04em;
+      color: var(--accent);
+    }
+    .topbar-sub {
+      font-size: .75rem;
+      color: var(--muted);
+      border-left: 1px solid var(--border);
+      padding-left: 12px;
+    }
+    .topbar-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      margin-left: auto;
+    }
+
+    /* ── Main wrap ────────────────────────── */
+    .main-wrap { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+    .section-label {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .75rem;
+    }
+
+    /* ── Cards row ────────────────────────── */
+    .cards-row {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 1.4fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1.4rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(0,0,0,.35);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      opacity: .07;
+    }
+    .stat-card.c-total::before  { background: var(--accent); }
+    .stat-card.c-laki::before   { background: #60a5fa; }
+    .stat-card.c-perempuan::before { background: var(--accent2); }
+    .stat-card.c-ak::before     { background: var(--yellow); }
+    .stat-card.c-it::before     { background: var(--green); }
+    .stat-card.c-ipk::before    { background: var(--purple); }
+
+    .stat-card .card-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      margin-bottom: .85rem;
+    }
+    .stat-card.c-total    .card-icon { background: rgba(79,138,255,.15); color: var(--accent); }
+    .stat-card.c-laki     .card-icon { background: rgba(96,165,250,.15); color: #60a5fa; }
+    .stat-card.c-perempuan .card-icon { background: rgba(248,87,166,.15); color: var(--accent2); }
+    .stat-card.c-ak       .card-icon { background: rgba(245,200,66,.15); color: var(--yellow); }
+    .stat-card.c-it       .card-icon { background: rgba(34,211,165,.15); color: var(--green); }
+    .stat-card.c-ipk      .card-icon { background: rgba(167,139,250,.15); color: var(--purple); }
+
+    .stat-label {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .3rem;
+    }
+    .stat-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text);
+    }
+    .stat-value.ipk-val { font-size: 1.6rem; }
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: .5rem;
+      font-size: .68rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .badge-up   { background: rgba(34,211,165,.12); color: var(--green); }
+    .badge-down { background: rgba(248,87,166,.12); color: var(--accent2); }
+
+    /* group separators */
+    .card-group-divider {
+      grid-column: span 6;
+      height: 0;
+      border: none;
+    }
+
+    /* ── Table section ────────────────────── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: .75rem;
+    }
+    .table-title {
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -.01em;
+    }
+    .table-meta {
+      font-size: .75rem;
+      color: var(--muted);
+    }
+
+    /* DataTable overrides */
+    table.dataTable {
+      border-collapse: collapse !important;
+    }
+    table.dataTable thead th {
+      background: var(--surface2) !important;
+      color: var(--muted) !important;
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      border: none !important;
+      padding: .85rem 1rem !important;
+    }
+    table.dataTable thead th:first-child { border-radius: 8px 0 0 8px; }
+    table.dataTable thead th:last-child  { border-radius: 0 8px 8px 0; }
+    table.dataTable tbody td {
+      background: transparent !important;
+      border-top: 1px solid var(--border) !important;
+      color: var(--text) !important;
+      font-size: .875rem;
+      padding: .85rem 1rem !important;
+      vertical-align: middle;
+    }
+    table.dataTable tbody tr:hover td {
+      background: var(--surface2) !important;
+    }
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+      color: var(--muted) !important;
+      font-size: .8rem;
+    }
+    .dataTables_wrapper .dataTables_filter input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: .35rem .75rem;
+      outline: none;
+    }
+    .dataTables_wrapper .dataTables_filter input:focus { border-color: var(--accent); }
+    .dataTables_wrapper .dataTables_length select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: .25rem .5rem;
+    }
+    .page-link {
+      background: var(--surface2) !important;
+      border-color: var(--border) !important;
+      color: var(--text) !important;
+    }
+    .page-link:hover, .page-item.active .page-link {
+      background: var(--accent) !important;
+      border-color: var(--accent) !important;
+      color: #fff !important;
+    }
+
+    /* pill badges in table */
+    .pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+    .pill-l  { background: rgba(96,165,250,.12); color: #60a5fa; }
+    .pill-p  { background: rgba(248,87,166,.12); color: var(--accent2); }
+    .pill-ak { background: rgba(245,200,66,.12);  color: var(--yellow); }
+    .pill-it { background: rgba(34,211,165,.12);  color: var(--green); }
+    .ipk-text { font-family: 'Space Mono', monospace; font-size: .82rem; }
+
+    /* ── Buttons ──────────────────────────── */
+    .action-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn-export {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: .65rem 1.4rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: .85rem;
+      letter-spacing: .02em;
+      border: none;
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .btn-excel {
+      background: rgba(34,211,165,.15);
+      color: var(--green);
+      border: 1px solid rgba(34,211,165,.3);
+    }
+    .btn-excel:hover {
+      background: rgba(34,211,165,.25);
+      box-shadow: 0 0 16px rgba(34,211,165,.25);
+    }
+    .btn-wa {
+      background: rgba(79,138,255,.15);
+      color: var(--accent);
+      border: 1px solid rgba(79,138,255,.3);
+    }
+    .btn-wa:hover {
+      background: rgba(79,138,255,.25);
+      box-shadow: 0 0 16px rgba(79,138,255,.25);
+    }
+    .btn-export i { font-size: 1rem; }
+
+    @media (max-width: 900px) {
+      .cards-row { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .cards-row { grid-template-columns: 1fr 1fr; }
+      .main-wrap { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <span class="topbar-brand">SIAKAD</span>
+    <span class="topbar-sub">Dashboard Mahasiswa</span>
+    <span class="topbar-dot"></span>
+  </div>
+
+  <div class="main-wrap">
+
+    <!-- Section Label -->
+    <div class="section-label">Ringkasan Data</div>
+
+    <!-- ── 6 Cards Row ── -->
+    <div class="cards-row">
+
+      <!-- 1: Total Mahasiswa -->
+      <div class="stat-card c-total">
+        <div class="card-icon"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-label">Total Mahasiswa</div>
+        <div class="stat-value">248</div>
+      </div>
+
+      <!-- 2a: Laki-laki -->
+      <div class="stat-card c-laki">
+        <div class="card-icon"><i class="bi bi-gender-male"></i></div>
+        <div class="stat-label">Laki-Laki</div>
+        <div class="stat-value">142</div>
+      </div>
+
+      <!-- 2b: Perempuan -->
+      <div class="stat-card c-perempuan">
+        <div class="card-icon"><i class="bi bi-gender-female"></i></div>
+        <div class="stat-label">Perempuan</div>
+        <div class="stat-value">106</div>
+      </div>
+
+      <!-- 3a: Akuntansi -->
+      <div class="stat-card c-ak">
+        <div class="card-icon"><i class="bi bi-calculator-fill"></i></div>
+        <div class="stat-label">Jurusan AK</div>
+        <div class="stat-value">119</div>
+      </div>
+
+      <!-- 3b: Informatika -->
+      <div class="stat-card c-it">
+        <div class="card-icon"><i class="bi bi-cpu-fill"></i></div>
+        <div class="stat-label">Jurusan IT</div>
+        <div class="stat-value">129</div>
+      </div>
+
+      <!-- 4: Rata-rata IPK -->
+      <div class="stat-card c-ipk">
+        <div class="card-icon"><i class="bi bi-star-fill"></i></div>
+        <div class="stat-label">Rata-rata IPK</div>
+        <div class="stat-value ipk-val">3.42</div>
+      </div>
+
+    </div>
+    <!-- /cards row -->
+
+    <!-- ── Table Card ── -->
+    <div class="table-card">
+      <div class="table-header">
+        <div>
+          <div class="table-title">Data Mahasiswa</div>
+          <div class="table-meta">Menampilkan seluruh data terdaftar</div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="tabelMahasiswa" class="table table-hover w-100">
+          <thead>
+            <tr>
+              <th>NIM</th>
+              <th>Nama</th>
+              <th>Jenis Kelamin</th>
+              <th>Kode Jurusan</th>
+              <th>IPK</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2021AK001</span></td>
+              <td>Andi Pratama</td>
+              <td><span class="pill pill-l">L</span></td>
+              <td><span class="pill pill-ak">AK</span></td>
+              <td><span class="ipk-text">3.75</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2021IT002</span></td>
+              <td>Bunga Rahmawati</td>
+              <td><span class="pill pill-p">P</span></td>
+              <td><span class="pill pill-it">IT</span></td>
+              <td><span class="ipk-text">3.90</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2021AK003</span></td>
+              <td>Cahyo Nugroho</td>
+              <td><span class="pill pill-l">L</span></td>
+              <td><span class="pill pill-ak">AK</span></td>
+              <td><span class="ipk-text">3.20</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2021IT004</span></td>
+              <td>Dewi Anggraini</td>
+              <td><span class="pill pill-p">P</span></td>
+              <td><span class="pill pill-it">IT</span></td>
+              <td><span class="ipk-text">3.55</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2021AK005</span></td>
+              <td>Eko Santoso</td>
+              <td><span class="pill pill-l">L</span></td>
+              <td><span class="pill pill-ak">AK</span></td>
+              <td><span class="ipk-text">2.88</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2021IT006</span></td>
+              <td>Farah Dianti</td>
+              <td><span class="pill pill-p">P</span></td>
+              <td><span class="pill pill-it">IT</span></td>
+              <td><span class="ipk-text">3.67</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2022AK007</span></td>
+              <td>Gunawan Hadi</td>
+              <td><span class="pill pill-l">L</span></td>
+              <td><span class="pill pill-ak">AK</span></td>
+              <td><span class="ipk-text">3.10</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2022IT008</span></td>
+              <td>Hana Permata</td>
+              <td><span class="pill pill-p">P</span></td>
+              <td><span class="pill pill-it">IT</span></td>
+              <td><span class="ipk-text">3.82</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2022AK009</span></td>
+              <td>Irfan Maulana</td>
+              <td><span class="pill pill-l">L</span></td>
+              <td><span class="pill pill-ak">AK</span></td>
+              <td><span class="ipk-text">3.44</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2022IT010</span></td>
+              <td>Jihan Azzahra</td>
+              <td><span class="pill pill-p">P</span></td>
+              <td><span class="pill pill-it">IT</span></td>
+              <td><span class="ipk-text">3.98</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2022AK011</span></td>
+              <td>Kevin Darmawan</td>
+              <td><span class="pill pill-l">L</span></td>
+              <td><span class="pill pill-ak">AK</span></td>
+              <td><span class="ipk-text">2.75</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2022IT012</span></td>
+              <td>Lita Salsabila</td>
+              <td><span class="pill pill-p">P</span></td>
+              <td><span class="pill pill-it">IT</span></td>
+              <td><span class="ipk-text">3.61</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2023AK013</span></td>
+              <td>Muhammad Rizky</td>
+              <td><span class="pill pill-l">L</span></td>
+              <td><span class="pill pill-ak">AK</span></td>
+              <td><span class="ipk-text">3.33</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2023IT014</span></td>
+              <td>Nadia Kusuma</td>
+              <td><span class="pill pill-p">P</span></td>
+              <td><span class="pill pill-it">IT</span></td>
+              <td><span class="ipk-text">3.77</span></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-size:.8rem;">2023AK015</span></td>
+              <td>Oscar Febrianto</td>
+              <td><span class="pill pill-l">L</span></td>
+              <td><span class="pill pill-ak">AK</span></td>
+              <td><span class="ipk-text">3.05</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Action Buttons ── -->
+    <div class="action-row">
+      <button class="btn-export btn-excel">
+        <i class="bi bi-file-earmark-excel-fill"></i>
+        Export Excel Data
+      </button>
+      <button class="btn-export btn-wa">
+        <i class="bi bi-whatsapp"></i>
+        Send File Excel to WA
+      </button>
+    </div>
+
+  </div><!-- /main-wrap -->
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      $('#tabelMahasiswa').DataTable({
+        language: {
+          search: "Cari:",
+          lengthMenu: "Tampilkan _MENU_ data",
+          info: "Menampilkan _START_–_END_ dari _TOTAL_ mahasiswa",
+          paginate: { previous: "‹", next: "›" }
+        },
+        pageLength: 10,
+        order: [[0, 'asc']]
+      });
+    });
+  </script>
+
+</body>
+</html>
