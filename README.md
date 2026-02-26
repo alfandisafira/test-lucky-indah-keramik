@@ -11,6 +11,7 @@ Pastikan sudah terinstall di komputer:
 - [Node.js](https://nodejs.org/) v18 ke atas
 - npm v9 ke atas
 - Google Chrome atau Chromium (dibutuhkan oleh Puppeteer)
+- Gunakan WA Business untuk Scan QR Code
 
 ---
 
