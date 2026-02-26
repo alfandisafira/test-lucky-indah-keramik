@@ -510,6 +510,23 @@
       }).fail(function(error) {
         console.error(error);
       });
+
+      $('.btn-excel').on('click', function() {
+        const urlExport = 'http://localhost:3000/api/excel/export';
+        window.open(urlExport, '_blank');
+      });
+
+      $('.btn-wa').on('click', function() {
+        // hit endpoint cek status
+        // isReady: true
+          // hit send-wa
+        // isReady: false
+          // hit scan-qr
+          // tampilkan modal
+          // startpolling
+          // isReady change to true
+          // hit send-wa
+      });
     });
   </script>
 
