@@ -316,6 +316,15 @@
       background: rgba(79,138,255,.25);
       box-shadow: 0 0 16px rgba(79,138,255,.25);
     }
+    .btn-disconnect-wa {
+      background: rgba(255, 79, 79,.15);
+      color: var(--accent2);
+      border: 1px solid rgba(255, 79, 79,.3);
+    }
+    .btn-disconnect-wa:hover {
+      background: rgba(255, 79, 79, 0.25);
+      box-shadow: 0 0 16px rgba(255, 79, 79, 0.25);
+    }
     .btn-export i { font-size: 1rem; }
 
     @media (max-width: 900px) {
@@ -449,6 +458,25 @@
         <i class="bi bi-whatsapp"></i>
         Send File Excel to WA
       </button>
+      <button class="btn-export btn-disconnect-wa">
+        <i class="bi bi-x-circle"></i>
+        Disconnect WhatsApp Account
+      </button>
+    </div>
+
+    <div class="modal fade" id="modalQr" tabindex="-1" aria-labelledby="waModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-secondary">
+          <div class="modal-header">
+            <h5 class="modal-title text-white">Scan dengan WhatsApp</h5>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex justify-content-center mb-3">
+              <img id="qrImage" src="" alt="QR Code" style="width:200px;height:200px" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div><!-- /main-wrap -->
@@ -465,7 +493,7 @@
     $(document).ready(function () {
       $('#tabelMahasiswa').DataTable({
         ajax: {
-            url: 'http://localhost:3000/api/mahasiswa', 
+            url: '/api/mahasiswa', 
             type: 'GET', 
             error: function (xhr, error, thrown) {
                 console.error('Error fetching data:', error);
@@ -497,7 +525,7 @@
         order: [[0, 'asc']]
       });
 
-      $.get('http://localhost:3000/api/mahasiswa/summary', function(response) {
+      $.get('api/mahasiswa/summary', function(response) {
         const stats = response.data;
 
         $(".c-total .stat-value").html(stats.total);
@@ -516,17 +544,97 @@
         window.open(urlExport, '_blank');
       });
 
+      let pollingInterval = null; // simpan referensi interval
+
+      const modalQr = new bootstrap.Modal(document.getElementById('modalQr'));
+
+      function startPolling() {
+        // Pastikan tidak ada polling yang berjalan sebelumnya
+        stopPolling();
+
+        pollingInterval = setInterval(function () {
+          
+          $.get('api/excel/wa-status', function (data) {
+            if (data.is_ready) {
+              stopPolling(); // ← berhenti saat sudah scan
+              
+              sendFile();
+
+              $('.btn-wa').text('Send File Excel to WA').prop('disabled', false);
+
+
+              modalQr.hide();
+            }
+          });
+        }, 3000);
+      }
+
+      function stopPolling() {
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          pollingInterval = null;
+        }
+      }
+
+      function sendFile() {
+        $('.btn-wa').prop('disabled', true).text('Mengirim...');
+
+        const phone = prompt("Masukkan nomor Whatsapp yang mau dikirim file excel: ");
+
+        if(phone == ""){
+          alert("Nomor tidak boleh kosong!")
+        } else if(phone == null){
+          alert("Batal mengirim file excel")
+        } else {
+          $.ajax({
+            url: 'api/excel/send-wa',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ phone: phone }),
+            success: function (data) {
+              if (data.message) {
+                alert(data.message)
+                $('.btn-wa').text('Send File Excel to WA').prop('disabled', false);
+              } else if (data.need_scan) {
+                $("#modalQr").show();
+                startPolling(); // mulai polling
+              }
+            },
+            error: function (error) {
+              console.log(error)
+              $('.btn-wa').text('Send File Excel to WA').prop('disabled', false);
+            }
+          });
+        }
+      }
+
       $('.btn-wa').on('click', function() {
-        // hit endpoint cek status
-        // isReady: true
-          // hit send-wa
-        // isReady: false
-          // hit scan-qr
-          // tampilkan modal
-          // startpolling
-          // isReady change to true
-          // hit send-wa
+        $('.btn-wa').prop('disabled', true).text('Mengecek...');
+
+        $.get('api/excel/wa-status', function (data) {
+          if (data.is_ready) {
+            sendFile();
+            
+            $('.btn-wa').text('Send File Excel to WA').prop('disabled', false);
+          } else {
+            $('#qrImage').attr('src', data.qr);
+
+            modalQr.show();
+            
+            startPolling(); // mulai polling
+          }
+        });
       });
+
+      $('.btn-disconnect-wa').on('click', function() {
+        $.post('api/excel/wa-logout', function (data) {
+          console.log(data)
+          if (data.message) {
+            alert(data.message)
+          }
+        });
+      })
+
     });
   </script>
 
