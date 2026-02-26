@@ -3,13 +3,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from 'src/database/databasel.module';
 import { MahasiswaModule } from './mahasiswa/mahasiswa.module';
-import { ExcelService } from './excel/excel.service';
-import { ExcelController } from './excel/excel.controller';
-import { MahasiswaService } from './mahasiswa/mahasiswa.service';
+import { ExcelModule } from './excel/excel.module';
 
 @Module({
-  imports: [MahasiswaModule, DatabaseModule],
-  controllers: [AppController, ExcelController],
-  providers: [AppService, MahasiswaService, ExcelService],
+  imports: [MahasiswaModule, DatabaseModule, ExcelModule],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
